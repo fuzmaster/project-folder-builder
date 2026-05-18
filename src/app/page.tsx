@@ -9,6 +9,8 @@ import { TemplateCard } from "@/components/UI/TemplateCard";
 import { FolderTreePreview } from "@/components/UI/FolderTreePreview";
 import { ProjectMetadataForm } from "@/components/forms/ProjectMetadataForm";
 import { DownloadButton } from "@/components/UI/DownloadButton";
+import { AuthPanel } from "@/components/forms/AuthPanel";
+import { AccountProfile } from "@/lib/firebaseClient";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -18,6 +20,7 @@ export default function HomePage() {
   const templates = useMemo<TemplateSpec[]>(() => [...freeTemplates, ...premiumTemplates], []);
   const [selectedId, setSelectedId] = useState(freeTemplates[0].id);
   const [notice, setNotice] = useState("");
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [metadata, setMetadata] = useState<ProjectMetadata>({
     projectName: "First Client Edit",
     clientName: "Demo Client",
@@ -26,7 +29,7 @@ export default function HomePage() {
     editorName: "Editor"
   });
 
-  const premiumUnlocked = false;
+  const premiumUnlocked = Boolean(profile?.isPro);
   const selected = templates.find((template) => template.id === selectedId) || templates[0];
 
   return (
@@ -65,6 +68,7 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-4">
+            <AuthPanel onProfileChange={setProfile} />
             <ProjectMetadataForm metadata={metadata} onChange={setMetadata} />
             {notice && (
               <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
@@ -104,10 +108,10 @@ export default function HomePage() {
               ))}
             </ul>
             <a
-              href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "/dashboard"}
+              href={process.env.NEXT_PUBLIC_GUMROAD_PRODUCT_URL || "/dashboard"}
               className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-white px-5 py-3 font-semibold text-black hover:bg-slate-100"
             >
-              Unlock Pro
+              Buy Pro on Gumroad
             </a>
           </div>
         </div>

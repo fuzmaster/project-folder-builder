@@ -25,7 +25,7 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
     }
 
     if (locked) {
-      onValidationError("Premium templates require an active paid session.");
+      onValidationError("Sign in and verify your Gumroad license to unlock Pro templates.");
       return;
     }
 
@@ -47,7 +47,7 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 font-semibold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {locked ? <Lock size={18} /> : <Download size={18} />}
-      {locked ? "Unlock Premium to Download" : downloading ? "Building ZIP..." : "Download Folder ZIP"}
+      {locked ? "Unlock Pro to Download" : downloading ? "Building ZIP..." : "Download Folder ZIP"}
     </button>
   );
 }

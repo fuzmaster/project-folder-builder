@@ -2,16 +2,18 @@
 
 Project Folder Builder is a lightweight Next.js utility for new video editors, freelancers, creators, and students. Users choose a video project type, enter project metadata, and instantly download a clean, professional folder structure as a ZIP file.
 
-It includes free templates for YouTube videos, podcasts, reels, wedding films, music videos, school projects, gaming videos, and client ads. Premium templates are scaffolded for agency, podcast network, and freelancer workflows using Supabase and Stripe.
+Free templates generate ZIP files fully in the browser with JSZip and FileSaver, so visitors can use the core product without creating an account. Pro templates stay visible but locked until a user signs in with Firebase and verifies a Gumroad license key.
 
 ## Features
 
 - One-page Next.js app for generating project folder ZIP files
-- Free video editing templates for common creator, student, event, and client workflows
+- 8 free video editing templates for creator, student, event, and client workflows
+- 3 Pro templates for agency, podcast network, and freelancer workflows
 - Metadata-aware folder names, starter README files, checklists, notes, and upload copy docs
-- Browser-side ZIP generation with JSZip
-- Premium template scaffolding for Supabase account checks and Stripe payments
-- Tailwind CSS interface with reusable template, form, preview, and download components
+- Firebase Auth for Google and email/password accounts
+- Firestore account profiles with Pro status
+- Firebase Admin server route for trusted account updates
+- Gumroad license verification for Pro unlocks
 
 ## Templates
 
@@ -26,7 +28,7 @@ It includes free templates for YouTube videos, podcasts, reels, wedding films, m
 - Gaming Video Project
 - Client Ad Project
 
-### Premium Scaffolded
+### Pro
 
 - Agency Video Campaign
 - Professional Podcast Network
@@ -38,45 +40,82 @@ It includes free templates for YouTube videos, podcasts, reels, wedding films, m
 - TypeScript
 - Tailwind CSS
 - JSZip
-- Supabase
-- Stripe
-
-## Run Locally
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://localhost:3000.
+- FileSaver
+- Firebase Auth
+- Firestore
+- Firebase Admin SDK
+- Gumroad license verification
 
 ## Environment
 
-Copy `.env.example` to `.env.local` and fill in Supabase and Stripe values when enabling paid accounts.
+Copy `.env.example` to `.env.local`.
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PAYMENT_LINK=
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+
+GUMROAD_PRODUCT_ID=
+GUMROAD_PRODUCT_PERMALINK=
+NEXT_PUBLIC_GUMROAD_PRODUCT_URL=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Free ZIP generation works client-side without Supabase or Stripe.
+Free ZIP generation works without Firebase or Gumroad configuration. Account sign-in and Pro unlocks require Firebase and Gumroad environment variables.
 
-## Supabase Table
+## Firebase Setup
 
-```sql
-create table if not exists profiles (
-  id uuid primary key default gen_random_uuid(),
-  email text unique,
-  is_pro boolean not null default false,
-  stripe_customer_id text,
-  updated_at timestamptz default now()
-);
+1. Create a Firebase project.
+2. Enable Authentication providers for Google and email/password.
+3. Create a Firestore database.
+4. Add the public Firebase web app values to the `NEXT_PUBLIC_FIREBASE_*` variables.
+5. Create a Firebase service account and add `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`.
+
+If the private key is stored with escaped line breaks, the server normalizes it with `replace(/\\n/g, "\n")`.
+
+## Firestore Rules
+
+Use rules that let signed-in users read only their own profile. Client writes are disabled because the server route grants Pro access through Firebase Admin after Gumroad verification.
+
+```txt
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
 ```
+
+## Gumroad Setup
+
+1. Create a Gumroad product for Project Folder Builder Pro.
+2. Add the public product URL to `NEXT_PUBLIC_GUMROAD_PRODUCT_URL`.
+3. Add `GUMROAD_PRODUCT_ID` for license verification.
+4. Optionally add `GUMROAD_PRODUCT_PERMALINK` as a fallback only when a product ID is not available.
+
+Gumroad recommends `product_id` for products created on or after January 9, 2023. This app sends `GUMROAD_PRODUCT_ID` first and only falls back to `GUMROAD_PRODUCT_PERMALINK` when no product ID is provided.
+
+## Pro Unlock Flow
+
+1. User buys Pro on Gumroad.
+2. User signs in with Firebase.
+3. User pastes their Gumroad license key.
+4. `/api/gumroad/verify` verifies the Firebase ID token with Firebase Admin.
+5. The server verifies the license with Gumroad using `increment_uses_count=false`.
+6. The server rejects refunded, disputed, chargebacked, cancelled, or failed subscription purchases.
+7. On success, Firebase Admin writes `users/{uid}.isPro = true` in Firestore.
+8. The client refreshes the profile and unlocks Pro template downloads.
 
 ## Repository Topics
 
