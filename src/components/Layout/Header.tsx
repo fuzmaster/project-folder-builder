@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 
 function LogoMark({ size = 30 }: { size?: number }) {
   return (
@@ -19,6 +22,10 @@ function LogoMark({ size = 30 }: { size?: number }) {
   );
 }
 
+function openWizard() {
+  window.dispatchEvent(new CustomEvent("pfb:open-wizard"));
+}
+
 export function Header() {
   return (
     <header className="pfb-header">
@@ -28,6 +35,15 @@ export function Header() {
           <span className="pfb-wordmark-text">PROJECT FOLDER BUILDER</span>
         </Link>
         <nav className="pfb-nav">
+          <button
+            type="button"
+            onClick={openWizard}
+            className="pfb-nav-quick"
+            aria-label="Open quick-start wizard"
+          >
+            <Sparkles size={12} />
+            Quick start
+          </button>
           <span className="pfb-nav-ver">v1.0</span>
           <Link href="/dashboard">Dashboard</Link>
           <a href="#pricing">Pricing</a>

@@ -13,6 +13,7 @@ import {
   signOutUser,
   subscribeToAuthState
 } from "@/lib/firebaseClient";
+import { trackEvent } from "@/lib/analytics";
 
 type Props = {
   onProfileChange: (profile: AccountProfile | null) => void;
@@ -74,15 +75,18 @@ export function AuthPanel({ onProfileChange }: Props) {
     onProfileChange(accountProfile);
   }
 
-  async function runAuthAction(action: () => Promise<unknown>, successMessage: string) {
+  async function runAuthAction(action: () => Promise<unknown>, successMessage: string, kind?: string) {
     setBusy(true);
     setMessage("");
+    if (kind) trackEvent("signin_started", { kind });
     try {
       await action();
       await refreshProfile();
       setMessage(successMessage);
+      if (kind) trackEvent("signin_succeeded", { kind });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Account action failed.");
+      if (kind) trackEvent("signin_failed", { kind });
     } finally {
       setBusy(false);
     }
@@ -90,13 +94,14 @@ export function AuthPanel({ onProfileChange }: Props) {
 
   async function handleEmailSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await runAuthAction(() => signInWithEmail(email.trim(), password), "Signed in.");
+    await runAuthAction(() => signInWithEmail(email.trim(), password), "Signed in.", "email");
   }
 
   async function handleCreateAccount() {
     await runAuthAction(
       () => createAccountWithEmail(email.trim(), password),
-      "Account created."
+      "Account created.",
+      "email-create"
     );
   }
 
@@ -131,8 +136,10 @@ export function AuthPanel({ onProfileChange }: Props) {
 
       await refreshProfile();
       setMessage(`Pro unlocked${result.productName ? ` for ${result.productName}` : ""}.`);
+      trackEvent("license_verified", { productName: result.productName ?? null });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to verify Gumroad license.");
+      trackEvent("license_verify_failed");
     } finally {
       setBusy(false);
     }
@@ -181,7 +188,7 @@ export function AuthPanel({ onProfileChange }: Props) {
             <button
               type="button"
               className="pfb-btn pfb-btn-light"
-              onClick={() => runAuthAction(signInWithGoogle, "Signed in with Google.")}
+              onClick={() => runAuthAction(signInWithGoogle, "Signed in with Google.", "google")}
               disabled={busy}
             >
               <GoogleGlyph size={17} />

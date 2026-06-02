@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { ArrowRight, Check, Minus, AlertTriangle } from "lucide-react";
 import { freeTemplates } from "@/config/templates";
 import { premiumTemplates } from "@/config/premiumTemplates";
@@ -11,6 +11,9 @@ import { ProjectMetadataForm } from "@/components/forms/ProjectMetadataForm";
 import { DownloadButton } from "@/components/UI/DownloadButton";
 import { AuthPanel } from "@/components/forms/AuthPanel";
 import { AccountProfile } from "@/lib/firebaseClient";
+import { Wizard } from "@/components/Wizard/Wizard";
+import { trackEvent } from "@/lib/analytics";
+import { downloadProjectZip } from "@/utils/zipGenerator";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -74,6 +77,61 @@ export default function HomePage() {
   const proCount = premiumTemplates.length;
   const gumroadUrl = process.env.NEXT_PUBLIC_GUMROAD_PRODUCT_URL || "#pricing";
 
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [columns, setColumns] = useState(2);
+
+  useEffect(() => {
+    function measure() {
+      setColumns(window.innerWidth <= 620 ? 1 : 2);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const selectTemplate = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      const tpl = templates.find((t) => t.id === id);
+      if (tpl) trackEvent("template_selected", { id: tpl.id, tier: tpl.tier });
+    },
+    [templates]
+  );
+
+  function handleGridKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const idx = templates.findIndex((t) => t.id === selectedId);
+    if (idx < 0) return;
+    let next = idx;
+    switch (e.key) {
+      case "ArrowRight":
+        next = Math.min(templates.length - 1, idx + 1);
+        break;
+      case "ArrowLeft":
+        next = Math.max(0, idx - 1);
+        break;
+      case "ArrowDown":
+        next = Math.min(templates.length - 1, idx + columns);
+        break;
+      case "ArrowUp":
+        next = Math.max(0, idx - columns);
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = templates.length - 1;
+        break;
+      default:
+        return;
+    }
+    if (next !== idx) {
+      e.preventDefault();
+      selectTemplate(templates[next].id);
+      const buttons = gridRef.current?.querySelectorAll<HTMLButtonElement>("button.pfb-card");
+      buttons?.[next]?.focus();
+    }
+  }
+
   return (
     <main id="top">
       {/* HERO */}
@@ -106,14 +164,23 @@ export default function HomePage() {
               {freeCount} free · {proCount} pro
             </span>
           </div>
-          <div className="pfb-grid">
-            {templates.map((tpl) => (
+          <div
+            className="pfb-grid"
+            ref={gridRef}
+            role="radiogroup"
+            aria-label="Project templates"
+            onKeyDown={handleGridKeyDown}
+          >
+            {templates.map((tpl, i) => (
               <TemplateCard
                 key={tpl.id}
                 template={tpl}
                 selected={tpl.id === selected.id}
                 premiumUnlocked={premiumUnlocked}
-                onSelect={() => setSelectedId(tpl.id)}
+                onSelect={() => selectTemplate(tpl.id)}
+                tabIndex={tpl.id === selected.id ? 0 : -1}
+                role="radio"
+                index={i}
               />
             ))}
           </div>
@@ -139,6 +206,20 @@ export default function HomePage() {
           </div>
         </aside>
       </section>
+
+      <Wizard
+        metadata={metadata}
+        onMetadataChange={setMetadata}
+        onSelectTemplate={selectTemplate}
+        onDownload={async () => {
+          try {
+            await downloadProjectZip(selected, metadata);
+            trackEvent("zip_downloaded", { id: selected.id, tier: selected.tier, source: "wizard" });
+          } catch (error) {
+            setNotice(error instanceof Error ? error.message : "Unable to generate ZIP.");
+          }
+        }}
+      />
 
       {/* PRICING */}
       <section id="pricing" className="pfb-shell pfb-pricing">

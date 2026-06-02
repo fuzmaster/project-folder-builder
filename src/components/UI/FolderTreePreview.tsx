@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, FileText } from "lucide-react";
 import { TemplateSpec, ProjectMetadata } from "@/types";
-import { formatPath, makeRootFolderName } from "@/utils/stringFormatter";
+import { formatPath, makeRootFolderName, normalizeMetadata } from "@/utils/stringFormatter";
 
 type Props = {
   template: TemplateSpec;
@@ -12,6 +13,7 @@ type Props = {
 type Node = {
   name: string;
   type: "folder" | "file";
+  fullPath?: string;
   children: Record<string, Node>;
   order: string[];
 };
@@ -21,7 +23,7 @@ type Row = {
   connector: string;
   name: string;
   type: "folder" | "file";
-  depth: number;
+  fullPath?: string;
 };
 
 function buildTree(template: TemplateSpec, metadata: ProjectMetadata): Node {
@@ -32,7 +34,7 @@ function buildTree(template: TemplateSpec, metadata: ProjectMetadata): Node {
     order: []
   };
 
-  function insert(segments: string[], isFile: boolean) {
+  function insert(segments: string[], isFile: boolean, fullPath?: string) {
     let node = root;
     segments.forEach((seg, i) => {
       const last = i === segments.length - 1;
@@ -40,6 +42,7 @@ function buildTree(template: TemplateSpec, metadata: ProjectMetadata): Node {
         node.children[seg] = {
           name: seg,
           type: last && isFile ? "file" : "folder",
+          fullPath: last && isFile ? fullPath : undefined,
           children: {},
           order: []
         };
@@ -50,7 +53,10 @@ function buildTree(template: TemplateSpec, metadata: ProjectMetadata): Node {
   }
 
   template.folders.forEach((f) => insert(formatPath(f, metadata).split("/"), false));
-  template.files.forEach((f) => insert(formatPath(f.path, metadata).split("/"), true));
+  template.files.forEach((f) => {
+    const formatted = formatPath(f.path, metadata);
+    insert(formatted.split("/"), true, f.path);
+  });
   return root;
 }
 
@@ -65,7 +71,7 @@ function flattenTree(root: Node): Row[] {
         connector: last ? "└── " : "├── ",
         name: child.name,
         type: child.type,
-        depth: prefix.length
+        fullPath: child.fullPath
       });
       walk(child, prefix + (last ? "    " : "│   "));
     });
@@ -74,11 +80,40 @@ function flattenTree(root: Node): Row[] {
   return rows;
 }
 
+function applyTokens(content: string, metadata: ProjectMetadata): string {
+  const safe = normalizeMetadata(metadata);
+  return content.replace(
+    /\{\{\s*(projectName|clientName|clientId|projectDate|editorName)\s*\}\}/g,
+    (_, key) => safe[key as keyof ProjectMetadata]
+  );
+}
+
 export function FolderTreePreview({ template, metadata }: Props) {
   const root = useMemo(() => buildTree(template, metadata), [template, metadata]);
   const rows = useMemo(() => flattenTree(root), [root]);
   const folderCount = template.folders.length;
   const fileCount = template.files.length;
+
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedFilePath(template.files[0]?.path ?? null);
+  }, [template.id, template.files]);
+
+  const selectedFile = useMemo(
+    () => template.files.find((f) => f.path === selectedFilePath) ?? null,
+    [template.files, selectedFilePath]
+  );
+
+  const previewContent = useMemo(
+    () => (selectedFile ? applyTokens(selectedFile.content, metadata) : ""),
+    [selectedFile, metadata]
+  );
+
+  const previewPath = useMemo(
+    () => (selectedFile ? formatPath(selectedFile.path, metadata) : ""),
+    [selectedFile, metadata]
+  );
 
   return (
     <div className="pfb-tree">
@@ -99,23 +134,58 @@ export function FolderTreePreview({ template, metadata }: Props) {
               <span className="t-root">{root.name}/</span>
             </span>
           </div>
-          {rows.map((r, i) => (
-            <div className="pfb-tree-line" key={i}>
-              <span className="pfb-ln">{i + 2}</span>
-              <span className="pfb-tree-text">
-                <span className="t-guide">
-                  {r.prefix}
-                  {r.connector}
+          {rows.map((r, i) => {
+            const isClickable = r.type === "file" && Boolean(r.fullPath);
+            const isActive = isClickable && r.fullPath === selectedFilePath;
+            return (
+              <div
+                className={
+                  "pfb-tree-line" +
+                  (isClickable ? " is-clickable" : "") +
+                  (isActive ? " is-active" : "")
+                }
+                key={i}
+                onClick={isClickable ? () => setSelectedFilePath(r.fullPath!) : undefined}
+                role={isClickable ? "button" : undefined}
+                tabIndex={isClickable ? 0 : undefined}
+                onKeyDown={
+                  isClickable
+                    ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedFilePath(r.fullPath!);
+                        }
+                      }
+                    : undefined
+                }
+              >
+                <span className="pfb-ln">{i + 2}</span>
+                <span className="pfb-tree-text">
+                  <span className="t-guide">
+                    {r.prefix}
+                    {r.connector}
+                  </span>
+                  <span className={r.type === "folder" ? "t-folder" : "t-file"}>
+                    {r.name}
+                    {r.type === "folder" ? "/" : ""}
+                  </span>
                 </span>
-                <span className={r.type === "folder" ? "t-folder" : "t-file"}>
-                  {r.name}
-                  {r.type === "folder" ? "/" : ""}
-                </span>
-              </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {selectedFile && (
+        <details className="pfb-tree-preview" open>
+          <summary>
+            <FileText size={13} />
+            <span className="pfb-tree-preview-path">{previewPath}</span>
+            <ChevronDown size={14} className="pfb-tree-preview-chev" />
+          </summary>
+          <pre className="pfb-tree-preview-body">{previewContent}</pre>
+        </details>
+      )}
     </div>
   );
 }

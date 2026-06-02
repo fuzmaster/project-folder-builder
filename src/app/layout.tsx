@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Header } from "@/components/Layout/Header";
 import { Footer } from "@/components/Layout/Footer";
@@ -74,8 +75,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
       "max-video-preview": -1
     }
-  },
-  icons: { icon: "/favicon.ico" }
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -85,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         {children}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );

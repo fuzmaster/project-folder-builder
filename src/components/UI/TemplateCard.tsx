@@ -9,9 +9,20 @@ type Props = {
   selected: boolean;
   onSelect: () => void;
   premiumUnlocked: boolean;
+  tabIndex?: number;
+  role?: string;
+  index?: number;
 };
 
-export function TemplateCard({ template, selected, onSelect, premiumUnlocked }: Props) {
+export function TemplateCard({
+  template,
+  selected,
+  onSelect,
+  premiumUnlocked,
+  tabIndex,
+  role,
+  index
+}: Props) {
   const locked = template.tier === "premium" && !premiumUnlocked;
   const folders = template.folders.length;
   const files = template.files.length;
@@ -26,6 +37,10 @@ export function TemplateCard({ template, selected, onSelect, premiumUnlocked }: 
       onClick={onSelect}
       className={classes.join(" ")}
       aria-pressed={selected}
+      aria-checked={role === "radio" ? selected : undefined}
+      role={role}
+      tabIndex={tabIndex}
+      data-index={index}
       aria-label={`${template.name}${locked ? " (Pro, locked)" : ""}`}
     >
       <div className="pfb-card-top">

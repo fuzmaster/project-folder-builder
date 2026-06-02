@@ -5,6 +5,8 @@ import { Download, Lock } from "lucide-react";
 import { ProjectMetadata, TemplateSpec } from "@/types";
 import { downloadProjectZip } from "@/utils/zipGenerator";
 import { validateMetadata } from "@/utils/validation";
+import { trackEvent } from "@/lib/analytics";
+import { recordDownload } from "@/lib/history";
 
 type Props = {
   template: TemplateSpec;
@@ -32,6 +34,15 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
     setDownloading(true);
     try {
       await downloadProjectZip(template, metadata);
+      recordDownload({
+        templateId: template.id,
+        templateName: template.name,
+        tier: template.tier,
+        projectName: metadata.projectName,
+        clientName: metadata.clientName,
+        at: Date.now()
+      });
+      trackEvent("zip_downloaded", { id: template.id, tier: template.tier, source: "main" });
     } catch (error) {
       onValidationError(error instanceof Error ? error.message : "Unable to generate ZIP.");
     } finally {
