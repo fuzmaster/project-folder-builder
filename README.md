@@ -1,54 +1,69 @@
 # Project Folder Builder
 
-Project Folder Builder is a lightweight Next.js utility for new video editors, freelancers, creators, and students. Users choose a video project type, enter project metadata, and instantly download a clean, professional folder structure as a ZIP file.
+Generate professional video editing project folder structures as downloadable ZIP files in seconds.
 
-Free templates generate ZIP files fully in the browser with JSZip and FileSaver, so visitors can use the core product without creating an account. Pro templates stay visible but locked until a user signs in with Firebase and verifies a Gumroad license key.
+> Pick a project type, enter the job details, and download a ready-to-use ZIP with clean folders, starter checklists, and naming rules — built for new editors, freelancers, creators, and students.
+
+**Live app:** [project-folder-builder.vercel.app](https://project-folder-builder.vercel.app)
+
+---
+
+## Why
+
+New editors burn hours every project naming folders, recreating the same structure, and forgetting checklists. Agencies expect "clean handoff" from day one. This tool removes that friction — pick a template, enter project metadata, get a professional ZIP. No login required for the free tier.
 
 ## Features
 
-- One-page Next.js app for generating project folder ZIP files
-- 8 free video editing templates for creator, student, event, and client workflows
-- 3 Pro templates for agency, podcast network, and freelancer workflows
-- Metadata-aware folder names, starter README files, checklists, notes, and upload copy docs
-- Firebase Auth for Google and email/password accounts
-- Firestore account profiles with Pro status
-- Firebase Admin server route for trusted account updates
+- One-page Next.js app — no backend round-trip for free templates
+- 8 free editing templates (creator, student, event, client)
+- 3 Pro templates (agency, podcast network, freelancer)
+- Metadata-aware folder names, README files, checklists, notes, and upload-copy docs
+- Browser-side ZIP generation with JSZip + FileSaver (works offline after first load)
+- Filename sanitization for cross-platform safety
+- Firebase Auth (Google + email/password) for Pro accounts
 - Gumroad license verification for Pro unlocks
+- Firebase Admin server route for trusted profile updates
 
 ## Templates
 
-### Free
+**Free**
 
-- YouTube Video Project
-- Podcast Episode Edit
-- Short-Form Reel Pack
-- Wedding Film Project
-- Music Video Project
-- Student Video Project
-- Gaming Video Project
-- Client Ad Project
+| Template | For |
+| --- | --- |
+| YouTube Video Project | Creators publishing weekly long-form |
+| Podcast Episode Edit | Solo + interview podcasters |
+| Short-Form Reel Pack | Reels, Shorts, TikTok batches |
+| Wedding Film Project | Wedding videographers |
+| Music Video Project | Music video editors |
+| Student Video Project | Film school + class assignments |
+| Gaming Video Project | Gameplay creators |
+| Client Ad Project | Quick freelance ad jobs |
 
-### Pro
+**Pro**
 
-- Agency Video Campaign
-- Professional Podcast Network
-- Freelancer Client System
+| Template | For |
+| --- | --- |
+| Agency Video Campaign | Multi-deliverable agency campaigns |
+| Professional Podcast Network | Multi-show podcast networks |
+| Freelancer Client System | Full client-management folder system |
 
 ## Tech Stack
 
-- Next.js
-- TypeScript
-- Tailwind CSS
-- JSZip
-- FileSaver
-- Firebase Auth
-- Firestore
-- Firebase Admin SDK
-- Gumroad license verification
+Next.js · TypeScript · Tailwind CSS · JSZip · FileSaver · Firebase Auth · Firestore · Firebase Admin SDK · Gumroad license verification
+
+## Getting Started
+
+```bash
+git clone https://github.com/fuzmaster/project-folder-builder.git
+cd project-folder-builder
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+The app runs at `http://localhost:3000`. Free ZIP generation works without any environment variables — only Pro unlocks need Firebase and Gumroad config.
 
 ## Environment
-
-Copy `.env.example` to `.env.local`.
 
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=
@@ -68,21 +83,19 @@ NEXT_PUBLIC_GUMROAD_PRODUCT_URL=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Free ZIP generation works without Firebase or Gumroad configuration. Account sign-in and Pro unlocks require Firebase and Gumroad environment variables.
+If `FIREBASE_PRIVATE_KEY` is stored with escaped line breaks, the server normalizes it with `replace(/\\n/g, "\n")`.
 
 ## Firebase Setup
 
 1. Create a Firebase project.
 2. Enable Authentication providers for Google and email/password.
 3. Create a Firestore database.
-4. Add the public Firebase web app values to the `NEXT_PUBLIC_FIREBASE_*` variables.
-5. Create a Firebase service account and add `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`.
+4. Add the web-app values to the `NEXT_PUBLIC_FIREBASE_*` variables.
+5. Create a service account and add `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`.
 
-If the private key is stored with escaped line breaks, the server normalizes it with `replace(/\\n/g, "\n")`.
+### Firestore rules
 
-## Firestore Rules
-
-Use rules that let signed-in users read only their own profile. Client writes are disabled because the server route grants Pro access through Firebase Admin after Gumroad verification.
+Signed-in users read only their own profile. Client writes are disabled — the server route updates Pro status via Firebase Admin after Gumroad verification.
 
 ```txt
 rules_version = '2';
@@ -100,11 +113,11 @@ service cloud.firestore {
 ## Gumroad Setup
 
 1. Create a Gumroad product for Project Folder Builder Pro.
-2. Add the public product URL to `NEXT_PUBLIC_GUMROAD_PRODUCT_URL`.
-3. Add `GUMROAD_PRODUCT_ID` for license verification.
-4. Optionally add `GUMROAD_PRODUCT_PERMALINK` as a fallback only when a product ID is not available.
+2. Set `NEXT_PUBLIC_GUMROAD_PRODUCT_URL` to the public product URL.
+3. Set `GUMROAD_PRODUCT_ID` for license verification.
+4. Optionally set `GUMROAD_PRODUCT_PERMALINK` as a fallback when no product ID is available.
 
-Gumroad recommends `product_id` for products created on or after January 9, 2023. This app sends `GUMROAD_PRODUCT_ID` first and only falls back to `GUMROAD_PRODUCT_PERMALINK` when no product ID is provided.
+Gumroad recommends `product_id` for products created on or after January 9, 2023. The app sends `GUMROAD_PRODUCT_ID` first and only falls back to `GUMROAD_PRODUCT_PERMALINK` when no product ID is provided.
 
 ## Pro Unlock Flow
 
@@ -117,6 +130,29 @@ Gumroad recommends `product_id` for products created on or after January 9, 2023
 7. On success, Firebase Admin writes `users/{uid}.isPro = true` in Firestore.
 8. The client refreshes the profile and unlocks Pro template downloads.
 
-## Repository Topics
+## Scripts
 
-`video-editing` `nextjs` `typescript` `tailwindcss` `jszip` `freelancer-tools` `creator-tools` `project-management` `premiere-pro` `davinci-resolve` `student-editors`
+```bash
+npm run dev        # local dev server
+npm run build      # production build
+npm run start      # run the production build
+npm run lint       # eslint
+npm run typecheck  # tsc --noEmit
+```
+
+## Deployment
+
+Built for Vercel. Set the env vars in the project's Vercel dashboard and deploy from `main`.
+
+## License
+
+MIT
+
+## Credits
+
+Built by [Jacob Britten](https://jacobbritten.com) — Media Systems Architect.
+
+- [Portfolio](https://jacobbritten.com)
+- [Projects](https://jacobbritten.com/projects.html)
+- [The Lab](https://jacobbritten.com/lab.html)
+- Support: [Ko-fi](https://ko-fi.com/jacobbritten) · [PayPal](https://www.paypal.com/donate/?hosted_button_id=47A4JJ4WNBY9U)
