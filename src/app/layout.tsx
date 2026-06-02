@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Layout/Header";
 import { Footer } from "@/components/Layout/Footer";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap"
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jetbrains-mono",
+  display: "swap"
+});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_APP_URL || "https://project-folder-builder.vercel.app";
@@ -32,9 +47,7 @@ export const metadata: Metadata = {
   publisher: "Jacob Britten",
   category: "Productivity",
   applicationName: "Project Folder Builder",
-  alternates: {
-    canonical: siteUrl
-  },
+  alternates: { canonical: siteUrl },
   openGraph: {
     type: "website",
     url: siteUrl,
@@ -62,20 +75,16 @@ export const metadata: Metadata = {
       "max-video-preview": -1
     }
   },
-  icons: {
-    icon: "/favicon.ico"
-  }
+  icons: { icon: "/favicon.ico" }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body>
-        <div className="grid-bg min-h-screen">
-          <Header />
-          {children}
-          <Footer />
-        </div>
+        <Header />
+        {children}
+        <Footer />
       </body>
     </html>
   );

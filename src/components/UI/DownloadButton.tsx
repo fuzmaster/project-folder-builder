@@ -18,14 +18,14 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
   const locked = template.tier === "premium" && !premiumUnlocked;
 
   async function handleDownload() {
-    const validation = validateMetadata(metadata);
-    if (!validation.valid) {
-      onValidationError(Object.values(validation.errors)[0] || "Check your project details.");
+    if (locked) {
+      onValidationError("Pro template — sign in and verify your Gumroad license to unlock.");
       return;
     }
 
-    if (locked) {
-      onValidationError("Sign in and verify your Gumroad license to unlock Pro templates.");
+    const validation = validateMetadata(metadata);
+    if (!validation.valid) {
+      onValidationError(Object.values(validation.errors)[0] || "Check your project details.");
       return;
     }
 
@@ -39,15 +39,27 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
     }
   }
 
+  if (locked) {
+    return (
+      <button type="button" className="pfb-download is-locked" onClick={handleDownload}>
+        <span className="pfb-dl-chip">PRO</span>
+        <span className="pfb-dl-main">
+          <Lock size={17} />
+          Pro — sign in to unlock
+        </span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
+      className="pfb-download"
       onClick={handleDownload}
       disabled={downloading}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 font-semibold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {locked ? <Lock size={18} /> : <Download size={18} />}
-      {locked ? "Unlock Pro to Download" : downloading ? "Building ZIP..." : "Download Folder ZIP"}
+      <Download size={18} strokeWidth={2} />
+      {downloading ? "Building ZIP…" : "Download folder ZIP"}
     </button>
   );
 }

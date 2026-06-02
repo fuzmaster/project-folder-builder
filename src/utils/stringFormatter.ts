@@ -1,4 +1,4 @@
-import { ProjectMetadata } from "@/types";
+import { ProjectMetadata, TemplateSpec } from "@/types";
 
 const tokenPattern = /\{\{\s*(projectName|clientName|clientId|projectDate|editorName)\s*\}\}/g;
 
@@ -53,4 +53,10 @@ export function formatPath(input: string, metadata: ProjectMetadata): string {
 export function makeRootFolderName(metadata: ProjectMetadata): string {
   const safe = normalizeMetadata(metadata);
   return `${safe.projectDate}_${slugifySegment(safe.clientId)}_${slugifySegment(safe.projectName)}`;
+}
+
+export function estimateZip(template: TemplateSpec): string {
+  const items = template.folders.length + template.files.length;
+  const kb = Math.max(2, Math.round(items * 0.18));
+  return `~${kb} KB`;
 }

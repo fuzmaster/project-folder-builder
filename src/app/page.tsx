@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Minus, AlertTriangle } from "lucide-react";
 import { freeTemplates } from "@/config/templates";
 import { premiumTemplates } from "@/config/premiumTemplates";
 import { ProjectMetadata, TemplateSpec } from "@/types";
@@ -16,8 +16,46 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+type PricingRow = {
+  label: string;
+  free: string | boolean;
+  pro: string | boolean;
+};
+
+const PRICING_ROWS: PricingRow[] = [
+  { label: "Starter + project templates", free: "8", pro: "11" },
+  { label: "Browser-side ZIP generation", free: true, pro: true },
+  { label: "Naming sanitizer", free: true, pro: true },
+  { label: "Markdown checklists", free: true, pro: true },
+  { label: "Premium agency templates", free: false, pro: true },
+  { label: "Premiere / DaVinci starter files", free: false, pro: true },
+  { label: "Client admin + billing folders", free: false, pro: true },
+  { label: "Revision & delivery systems", free: false, pro: true }
+];
+
+function PriceCell({ value }: { value: string | boolean }) {
+  if (value === true) {
+    return (
+      <span className="pfb-pc-yes">
+        <Check size={15} strokeWidth={2} />
+      </span>
+    );
+  }
+  if (value === false) {
+    return (
+      <span className="pfb-pc-no">
+        <Minus size={15} strokeWidth={2} />
+      </span>
+    );
+  }
+  return <span className="pfb-pc-num">{value}</span>;
+}
+
 export default function HomePage() {
-  const templates = useMemo<TemplateSpec[]>(() => [...freeTemplates, ...premiumTemplates], []);
+  const templates = useMemo<TemplateSpec[]>(
+    () => [...freeTemplates, ...premiumTemplates],
+    []
+  );
   const [selectedId, setSelectedId] = useState(freeTemplates[0].id);
   const [notice, setNotice] = useState("");
   const [profile, setProfile] = useState<AccountProfile | null>(null);
@@ -30,49 +68,65 @@ export default function HomePage() {
   });
 
   const premiumUnlocked = Boolean(profile?.isPro);
-  const selected = templates.find((template) => template.id === selectedId) || templates[0];
+  const selected = templates.find((t) => t.id === selectedId) || templates[0];
+
+  const freeCount = freeTemplates.length;
+  const proCount = premiumTemplates.length;
+  const gumroadUrl = process.env.NEXT_PUBLIC_GUMROAD_PRODUCT_URL || "#pricing";
 
   return (
-    <main>
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-        <div className="max-w-3xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-200">
-            <Sparkles size={14} />
-            Video project setup in one click
+    <main id="top">
+      {/* HERO */}
+      <section className="pfb-shell pfb-hero">
+        <span className="pfb-eyebrow">v1.0 / for editors</span>
+        <h1 className="pfb-hero-title">Folders before footage.</h1>
+        <p className="pfb-hero-sub">
+          Pick a project type, drop in the job details, and pull down a clean, named ZIP —
+          folders, checklists, and naming rules already in place.
+        </p>
+        <div className="pfb-hero-meta">
+          <span>
+            <b>{freeCount}</b> free templates
+          </span>
+          <i className="pfb-dot" />
+          <span>
+            <b>{proCount}</b> pro packs
+          </span>
+          <i className="pfb-dot" />
+          <span>browser-side ZIP</span>
+        </div>
+      </section>
+
+      {/* WORKSPACE */}
+      <section className="pfb-shell pfb-workspace">
+        <div className="pfb-col-templates">
+          <div className="pfb-col-head">
+            <h2 className="pfb-col-title">Choose a template</h2>
+            <span className="pfb-col-count">
+              {freeCount} free · {proCount} pro
+            </span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Build clean project folders before the edit gets messy.
-          </h1>
-          <p className="mt-5 text-lg leading-8 text-slate-300">
-            Pick a project type, enter the job details, and download a ready-to-use ZIP with professional folders, checklists, and naming rules.
-          </p>
+          <div className="pfb-grid">
+            {templates.map((tpl) => (
+              <TemplateCard
+                key={tpl.id}
+                template={tpl}
+                selected={tpl.id === selected.id}
+                premiumUnlocked={premiumUnlocked}
+                onSelect={() => setSelectedId(tpl.id)}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Choose a template</h2>
-              <span className="text-sm text-slate-400">{freeTemplates.length} free, {premiumTemplates.length} premium</span>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {templates.map((template) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  selected={template.id === selected.id}
-                  onSelect={() => setSelectedId(template.id)}
-                  premiumUnlocked={premiumUnlocked}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
+        <aside className="pfb-col-side">
+          <div className="pfb-side-sticky">
             <AuthPanel onProfileChange={setProfile} />
             <ProjectMetadataForm metadata={metadata} onChange={setMetadata} />
             {notice && (
-              <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-                {notice}
+              <div className="pfb-notice">
+                <AlertTriangle size={15} />
+                <span>{notice}</span>
               </div>
             )}
             <DownloadButton
@@ -83,36 +137,57 @@ export default function HomePage() {
             />
             <FolderTreePreview template={selected} metadata={metadata} />
           </div>
-        </div>
+        </aside>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-6xl px-4 pb-16">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6">
-            <h2 className="text-2xl font-bold">Free</h2>
-            <p className="mt-2 text-slate-400">For students and new editors getting organized.</p>
-            <p className="mt-5 text-4xl font-bold">$0</p>
-            <ul className="mt-6 space-y-3 text-sm text-slate-300">
-              {["8 starter templates", "Browser-side ZIP generation", "Naming sanitizer", "Markdown checklists"].map((item) => (
-                <li key={item} className="flex items-center gap-2"><Check size={16} className="text-emerald-300" />{item}</li>
-              ))}
-            </ul>
+      {/* PRICING */}
+      <section id="pricing" className="pfb-shell pfb-pricing">
+        <div className="pfb-pricing-head">
+          <span className="pfb-eyebrow">pricing / two tiers</span>
+          <h2 className="pfb-section-title">Free to start. Pro when it pays.</h2>
+        </div>
+        <div className="pfb-compare" role="table" aria-label="Free versus Pro comparison">
+          <div className="pfb-compare-header" role="row">
+            <div className="pfb-compare-feat" role="columnheader" />
+            <div className="pfb-compare-col" role="columnheader">
+              <span className="pfb-tier-name">FREE</span>
+              <span className="pfb-tier-price">$0</span>
+              <span className="pfb-tier-sub">students &amp; new editors</span>
+            </div>
+            <div className="pfb-compare-col pfb-compare-col-pro" role="columnheader">
+              <span className="pfb-tier-name">PRO</span>
+              <span className="pfb-tier-price">
+                $9<em>/mo</em>
+              </span>
+              <span className="pfb-tier-sub">freelancers &amp; agencies</span>
+            </div>
           </div>
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-6 shadow-glow">
-            <h2 className="text-2xl font-bold">Pro</h2>
-            <p className="mt-2 text-slate-300">For freelancers and agency-style workflows.</p>
-            <p className="mt-5 text-4xl font-bold">$9<span className="text-base font-normal text-slate-400">/mo</span></p>
-            <ul className="mt-6 space-y-3 text-sm text-slate-200">
-              {["Premium agency templates", "Premiere and DaVinci starter assets", "Client admin folders", "Revision and delivery systems"].map((item) => (
-                <li key={item} className="flex items-center gap-2"><Check size={16} className="text-emerald-300" />{item}</li>
-              ))}
-            </ul>
-            <a
-              href={process.env.NEXT_PUBLIC_GUMROAD_PRODUCT_URL || "/dashboard"}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-white px-5 py-3 font-semibold text-black hover:bg-slate-100"
-            >
-              Buy Pro on Gumroad
-            </a>
+          {PRICING_ROWS.map((row, i) => (
+            <div className="pfb-compare-row" role="row" key={i}>
+              <div className="pfb-compare-feat" role="cell">
+                {row.label}
+              </div>
+              <div className="pfb-compare-col" role="cell">
+                <PriceCell value={row.free} />
+              </div>
+              <div className="pfb-compare-col pfb-compare-col-pro" role="cell">
+                <PriceCell value={row.pro} />
+              </div>
+            </div>
+          ))}
+          <div className="pfb-compare-foot" role="row">
+            <div className="pfb-compare-feat" role="cell" />
+            <div className="pfb-compare-col" role="cell">
+              <a href="#top" className="pfb-btn pfb-btn-ghost pfb-btn-sm">
+                Use free
+              </a>
+            </div>
+            <div className="pfb-compare-col pfb-compare-col-pro" role="cell">
+              <a href={gumroadUrl} className="pfb-btn pfb-btn-accent pfb-btn-sm">
+                Get Pro
+                <ArrowRight size={15} />
+              </a>
+            </div>
           </div>
         </div>
       </section>

@@ -1,19 +1,36 @@
 import Link from "next/link";
-import { FolderKanban } from "lucide-react";
+
+function LogoMark({ size = 30 }: { size?: number }) {
+  return (
+    <span className="pfb-logo" style={{ width: size, height: size }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      >
+        <rect x="2.5" y="2.5" width="19" height="19" rx="4" />
+        <path d="M6.5 9.5a1 1 0 0 1 1-1H10l1.2 1.4H16.5a1 1 0 0 1 1 1v4.6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z" />
+      </svg>
+    </span>
+  );
+}
 
 export function Header() {
   return (
-    <header className="border-b border-white/10 bg-black/30 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center gap-3 font-semibold tracking-tight">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-black">
-            <FolderKanban size={20} />
-          </span>
-          <span>Project Folder Builder</span>
+    <header className="pfb-header">
+      <div className="pfb-shell pfb-header-inner">
+        <Link href="/" className="pfb-wordmark">
+          <LogoMark size={30} />
+          <span className="pfb-wordmark-text">PROJECT FOLDER BUILDER</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm text-slate-300">
-          <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
-          <a href="#pricing" className="hover:text-white">Pricing</a>
+        <nav className="pfb-nav">
+          <span className="pfb-nav-ver">v1.0</span>
+          <Link href="/dashboard">Dashboard</Link>
+          <a href="#pricing">Pricing</a>
         </nav>
       </div>
     </header>

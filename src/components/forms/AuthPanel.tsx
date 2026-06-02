@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { AlertTriangle, BadgeCheck, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Check, Key, LogOut, ShieldCheck } from "lucide-react";
 import {
   AccountProfile,
   auth,
@@ -17,6 +17,25 @@ import {
 type Props = {
   onProfileChange: (profile: AccountProfile | null) => void;
 };
+
+function GoogleGlyph({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#0A0C10"
+        d="M21.35 11.1H12v3.8h5.35c-.23 1.5-1.6 4.4-5.35 4.4a6.3 6.3 0 0 1 0-12.6c1.8 0 3 .77 3.7 1.43l2.5-2.42C16.6 3.9 14.5 3 12 3a9 9 0 1 0 0 18c5.2 0 8.6-3.65 8.6-8.8 0-.6-.06-1.04-.15-1.5z"
+      />
+    </svg>
+  );
+}
+
+function StepNum({ n, done }: { n: number; done?: boolean }) {
+  return (
+    <span className={"pfb-step-num" + (done ? " is-done" : "")}>
+      {done ? <Check size={13} strokeWidth={2.2} /> : n}
+    </span>
+  );
+}
 
 export function AuthPanel({ onProfileChange }: Props) {
   const gumroadProductUrl = process.env.NEXT_PUBLIC_GUMROAD_PRODUCT_URL;
@@ -49,10 +68,7 @@ export function AuthPanel({ onProfileChange }: Props) {
 
   async function refreshProfile() {
     const user = auth?.currentUser;
-    if (!user) {
-      return;
-    }
-
+    if (!user) return;
     const accountProfile = await readAccountProfile(user.uid);
     setProfile(accountProfile);
     onProfileChange(accountProfile);
@@ -61,7 +77,6 @@ export function AuthPanel({ onProfileChange }: Props) {
   async function runAuthAction(action: () => Promise<unknown>, successMessage: string) {
     setBusy(true);
     setMessage("");
-
     try {
       await action();
       await refreshProfile();
@@ -73,14 +88,9 @@ export function AuthPanel({ onProfileChange }: Props) {
     }
   }
 
-  async function handleEmailAuth(event: FormEvent<HTMLFormElement>, mode: "signIn" | "create") {
+  async function handleEmailSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const action =
-      mode === "create"
-        ? () => createAccountWithEmail(email.trim(), password)
-        : () => signInWithEmail(email.trim(), password);
-
-    await runAuthAction(action, mode === "create" ? "Account created." : "Signed in.");
+    await runAuthAction(() => signInWithEmail(email.trim(), password), "Signed in.");
   }
 
   async function handleCreateAccount() {
@@ -96,16 +106,13 @@ export function AuthPanel({ onProfileChange }: Props) {
       setMessage("Enter your Gumroad license key.");
       return;
     }
-
     const user = auth?.currentUser;
     if (!user) {
       setMessage("Sign in before verifying your Gumroad license.");
       return;
     }
-
     setBusy(true);
     setMessage("");
-
     try {
       const token = await user.getIdToken();
       const response = await fetch("/api/gumroad/verify", {
@@ -133,147 +140,168 @@ export function AuthPanel({ onProfileChange }: Props) {
 
   if (!isFirebaseConfigured) {
     return (
-      <section className="rounded-2xl border border-amber-400/25 bg-amber-400/10 p-5">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-1 text-amber-200" size={18} />
-          <div>
-            <h2 className="font-semibold text-amber-100">Accounts are not configured</h2>
-            <p className="mt-2 text-sm leading-6 text-amber-50/80">
-              Add the Firebase public environment variables to enable sign-in and Gumroad Pro unlocks.
-            </p>
-          </div>
+      <div className="pfb-panel">
+        <div className="pfb-panel-head">
+          <h2 className="pfb-panel-title">Account</h2>
+          <span className="pfb-panel-tag">offline</span>
         </div>
-      </section>
+        <div className="pfb-notice" style={{ marginTop: 14 }}>
+          <AlertTriangle size={15} />
+          <span>
+            Add the Firebase public environment variables to enable sign-in and Gumroad Pro unlocks.
+          </span>
+        </div>
+      </div>
     );
   }
 
+  const signedIn = Boolean(profile);
+  const isPro = Boolean(profile?.isPro);
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold">Account</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            {profile?.email || "Sign in to unlock Pro templates."}
-          </p>
-        </div>
-        <span className={[
-          "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
-          profile?.isPro ? "bg-emerald-400/15 text-emerald-200" : "bg-white/10 text-slate-300"
-        ].join(" ")}>
-          {profile?.isPro ? <BadgeCheck size={14} /> : <ShieldCheck size={14} />}
-          {profile?.isPro ? "Pro" : "Free"}
+    <div className="pfb-panel">
+      <div className="pfb-panel-head">
+        <h2 className="pfb-panel-title">Account</h2>
+        <span className={"pfb-account-badge " + (isPro ? "is-pro" : "")}>
+          {isPro ? <BadgeCheck size={13} /> : <ShieldCheck size={13} />}
+          {isPro ? "PRO" : "FREE"}
         </span>
       </div>
+      <p className="pfb-panel-sub">
+        {signedIn ? profile?.email : "Two steps to unlock Pro templates."}
+      </p>
 
-      {!profile ? (
-        <div className="mt-5 space-y-4">
-          <button
-            type="button"
-            onClick={() => runAuthAction(signInWithGoogle, "Signed in with Google.")}
-            disabled={busy}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white px-4 py-3 font-semibold text-black transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <Mail size={17} />
-            Sign in with Google
-          </button>
-
-          <form className="space-y-3" onSubmit={(event) => handleEmailAuth(event, "signIn")}>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="Email"
-              autoComplete="email"
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none ring-emerald-400/40 transition focus:ring-2"
-              required
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none ring-emerald-400/40 transition focus:ring-2"
-              required
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="rounded-xl bg-emerald-400 px-4 py-3 font-semibold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateAccount}
-                disabled={busy}
-                className="rounded-xl border border-white/10 px-4 py-3 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                Create Account
-              </button>
+      {!signedIn && (
+        <div className="pfb-step">
+          <div className="pfb-step-head">
+            <StepNum n={1} />
+            <span>Sign in</span>
+          </div>
+          <div className="pfb-step-body">
+            <button
+              type="button"
+              className="pfb-btn pfb-btn-light"
+              onClick={() => runAuthAction(signInWithGoogle, "Signed in with Google.")}
+              disabled={busy}
+            >
+              <GoogleGlyph size={17} />
+              Continue with Google
+            </button>
+            <div className="pfb-or">
+              <span>or email</span>
             </div>
-          </form>
-        </div>
-      ) : (
-        <div className="mt-5 space-y-4">
-          {!profile.isPro && (
-            <>
-              {gumroadProductUrl ? (
-                <a
-                  href={gumroadProductUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 font-semibold text-black transition hover:bg-slate-100"
-                >
-                  Buy Pro on Gumroad
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full cursor-not-allowed rounded-xl bg-white/20 px-4 py-3 font-semibold text-slate-400"
-                >
-                  Gumroad URL not configured
+            <form className="pfb-stack" onSubmit={handleEmailSignIn}>
+              <input
+                className="pfb-input"
+                type="email"
+                placeholder="Email"
+                value={email}
+                autoComplete="email"
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                className="pfb-input"
+                type="password"
+                placeholder="Password"
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <div className="pfb-form-row">
+                <button type="submit" className="pfb-btn pfb-btn-accent" disabled={busy}>
+                  Sign in
                 </button>
-              )}
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={licenseKey}
-                  onChange={(event) => setLicenseKey(event.target.value)}
-                  placeholder="Gumroad license key"
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none ring-emerald-400/40 transition focus:ring-2"
-                />
                 <button
                   type="button"
-                  onClick={verifyLicense}
+                  className="pfb-btn pfb-btn-ghost"
+                  onClick={handleCreateAccount}
                   disabled={busy}
-                  className="w-full rounded-xl bg-emerald-400 px-4 py-3 font-semibold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Verify License
+                  Create account
                 </button>
               </div>
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={() => runAuthAction(signOutUser, "Signed out.")}
-            disabled={busy}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <LogOut size={17} />
-            Sign Out
-          </button>
+            </form>
+          </div>
         </div>
       )}
 
-      {message && (
-        <p className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">
-          {message}
-        </p>
+      {signedIn && !isPro && (
+        <div className="pfb-step">
+          <div className="pfb-step-head">
+            <StepNum n={1} done />
+            <span>Signed in</span>
+          </div>
+          <div className="pfb-step-head pfb-step-head-2">
+            <StepNum n={2} />
+            <span>Verify Gumroad license</span>
+          </div>
+          <div className="pfb-step-body">
+            {gumroadProductUrl ? (
+              <a
+                href={gumroadProductUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="pfb-btn pfb-btn-light"
+              >
+                Buy Pro on Gumroad
+              </a>
+            ) : (
+              <button type="button" className="pfb-btn pfb-btn-ghost" disabled>
+                Gumroad URL not configured
+              </button>
+            )}
+            <div className="pfb-license">
+              <span className="pfb-license-ic">
+                <Key size={15} />
+              </span>
+              <input
+                className="pfb-input pfb-mono-input pfb-license-input"
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                value={licenseKey}
+                onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
+              />
+            </div>
+            <button
+              type="button"
+              className="pfb-btn pfb-btn-accent"
+              onClick={verifyLicense}
+              disabled={busy}
+            >
+              Verify license
+            </button>
+          </div>
+        </div>
       )}
-    </section>
+
+      {isPro && (
+        <div className="pfb-step">
+          <div className="pfb-step-head">
+            <StepNum n={1} done />
+            <span>Signed in</span>
+          </div>
+          <div className="pfb-step-head pfb-step-head-2">
+            <StepNum n={2} done />
+            <span>Pro verified</span>
+          </div>
+        </div>
+      )}
+
+      {signedIn && (
+        <button
+          type="button"
+          className="pfb-btn pfb-btn-ghost pfb-signout"
+          onClick={() => runAuthAction(signOutUser, "Signed out.")}
+          disabled={busy}
+          style={{ width: "100%" }}
+        >
+          <LogOut size={15} />
+          Sign out
+        </button>
+      )}
+
+      {message && <p className="pfb-auth-msg">{message}</p>}
+    </div>
   );
 }

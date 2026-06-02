@@ -1,3 +1,14 @@
+const LINKS = [
+  { href: "https://jacobbritten.com", label: "Portfolio" },
+  { href: "https://jacobbritten.com/projects.html", label: "Projects" },
+  { href: "https://jacobbritten.com/lab.html", label: "The Lab" },
+  { href: "https://ko-fi.com/jacobbritten", label: "Ko-fi" },
+  {
+    href: "https://www.paypal.com/donate/?hosted_button_id=47A4JJ4WNBY9U",
+    label: "PayPal"
+  }
+];
+
 export function Footer() {
   return (
     <footer
@@ -7,14 +18,13 @@ export function Footer() {
         width: "100%",
         background: "#050607",
         borderTop: "1px solid rgba(0,255,200,0.18)",
-        padding: "1.5rem 1.25rem",
-        fontFamily:
-          "'JetBrains Mono','SF Mono',Consolas,monospace"
+        padding: "24px 20px",
+        fontFamily: "var(--mono)"
       }}
     >
       <div
         style={{
-          maxWidth: "1100px",
+          maxWidth: "var(--shell)",
           margin: "0 auto",
           display: "flex",
           alignItems: "center",
@@ -45,22 +55,9 @@ export function Footer() {
         </p>
         <nav
           aria-label="Jacob Britten"
-          style={{
-            display: "flex",
-            gap: "1.25rem",
-            flexWrap: "wrap"
-          }}
+          style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}
         >
-          {[
-            { href: "https://jacobbritten.com", label: "Portfolio" },
-            { href: "https://jacobbritten.com/projects.html", label: "Projects" },
-            { href: "https://jacobbritten.com/lab.html", label: "The Lab" },
-            { href: "https://ko-fi.com/jacobbritten", label: "Ko-fi" },
-            {
-              href: "https://www.paypal.com/donate/?hosted_button_id=47A4JJ4WNBY9U",
-              label: "PayPal"
-            }
-          ].map((link) => (
+          {LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -71,8 +68,7 @@ export function Footer() {
                 letterSpacing: ".07em",
                 textTransform: "uppercase",
                 color: "rgba(255,255,255,.72)",
-                textDecoration: "none",
-                transition: "color .2s"
+                textDecoration: "none"
               }}
             >
               {link.label}
