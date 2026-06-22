@@ -108,8 +108,7 @@ input, button, select, textarea { font-family: inherit; color-scheme: dark; }
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 7px;
-  object-fit: cover;
+  object-fit: contain;
 }
 .pfb-wordmark-text {
   font-family: var(--mono);

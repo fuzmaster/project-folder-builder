@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">Project Folder Builder</title>
+  <desc id="desc">Project Folder Builder logo with the tagline Folders before footage.</desc>
+  <g transform="translate(28 34)">
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path
+        d="M0 26c0-5 4-9 9-9h22l9 10h40c5 0 9 4 9 9v42c0 5-4 9-9 9H9c-5 0-9-4-9-9z"
+        stroke="#edece2"
+        stroke-width="8"
+      />
+      <path d="M20 45v25l20-12.5z" fill="#edece2" stroke="#edece2" stroke-width="3" />
+      <path d="M50 47h21" stroke="#46b06a" stroke-width="7" />
+      <path d="M50 64h31" stroke="#edece2" stroke-width="7" />
+      <path d="M66 39v42" stroke="#46b06a" stroke-width="5" />
+    </g>
+  </g>
+  <text x="142" y="76" fill="#edece2" font-family="Space Grotesk, Arial, sans-serif" font-size="44" font-weight="700">
+    Project Folder Builder
+  </text>
+  <text x="146" y="122" fill="#9fbd95" font-family="JetBrains Mono, Consolas, monospace" font-size="22" letter-spacing="3">
+    Folders before footage.
+  </text>
+</svg>

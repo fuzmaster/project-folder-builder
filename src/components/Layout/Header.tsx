@@ -7,7 +7,7 @@ function LogoMark({ size = 30 }: { size?: number }) {
   return (
     <span className="pfb-logo" style={{ width: size, height: size }}>
       <img
-        src="/App%20Icon.png"
+        src="/logo-mark.svg"
         alt=""
         width={size}
         height={size}
