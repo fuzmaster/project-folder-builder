@@ -99,7 +99,7 @@ export default function DashboardPage() {
           maxWidth: "56ch"
         }}
       >
-        Account state, Pro status, license, and the last 20 ZIPs you generated on this device.
+        Pro status, Gumroad license, and the last 20 ZIPs you generated on this device.
       </p>
 
       {/* Account panel */}
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                   className="pfb-btn pfb-btn-ghost"
                 >
                   <ExternalLink size={14} />
-                  Manage subscription
+                  Open Gumroad purchase
                 </a>
               )}
               <button type="button" className="pfb-btn pfb-btn-ghost" onClick={handleSignOut}>

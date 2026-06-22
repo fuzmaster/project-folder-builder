@@ -10,7 +10,7 @@ const STORAGE_KEY = "pfb_wizard_seen_v1";
 
 const CATEGORIES: { id: string; label: string; description: string; match: string[] }[] = [
   { id: "creator", label: "YouTube / Creator", description: "Long-form, vlogs, essays, channel uploads.", match: ["Creator"] },
-  { id: "social", label: "Reels / Shorts / TikTok", description: "Vertical clips, captions, multi-platform exports.", match: ["Social"] },
+  { id: "social", label: "Reels / Shorts / TikTok", description: "Vertical clips, captions, multi-channel exports.", match: ["Social"] },
   { id: "podcast", label: "Podcast", description: "Multi-cam podcast cuts, transcripts, reels.", match: ["Podcast"] },
   { id: "event", label: "Wedding / Event", description: "Highlight films, ceremony edits, deliverables.", match: ["Event"] },
   { id: "music", label: "Music video", description: "Performance takes, b-roll, color, VFX.", match: ["Music"] },
@@ -22,7 +22,7 @@ type Props = {
   metadata: ProjectMetadata;
   onMetadataChange: (m: ProjectMetadata) => void;
   onSelectTemplate: (id: string) => void;
-  onDownload: () => void;
+  onDownload: () => Promise<void> | void;
 };
 
 export function Wizard({ metadata, onMetadataChange, onSelectTemplate, onDownload }: Props) {
@@ -113,9 +113,13 @@ export function Wizard({ metadata, onMetadataChange, onSelectTemplate, onDownloa
     if (step > 0) setStep(step - 1);
   }
 
-  function finish() {
-    onDownload();
-    close("completed");
+  async function finish() {
+    try {
+      await onDownload();
+      close("completed");
+    } catch {
+      // The page-level notice explains the validation or ZIP error.
+    }
   }
 
   return (

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono, Instrument_Serif } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Header } from "@/components/Layout/Header";
@@ -19,17 +19,25 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap"
 });
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+  display: "swap"
+});
+
 const siteUrl =
   process.env.NEXT_PUBLIC_APP_URL || "https://project-folder-builder.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Project Folder Builder — Professional Video Editing Folder Templates",
+    default: "Project Folder Builder - Folders before footage",
     template: "%s | Project Folder Builder"
   },
   description:
-    "Generate professional video editing project folders as a ZIP in seconds. Free templates for YouTube, podcasts, weddings, students, and clients. Pro templates for agencies and freelancers.",
+    "Generate clean video editing project folders as ready-to-use ZIPs in seconds. Free templates need no login.",
   keywords: [
     "video editing folder structure",
     "project folder template",
@@ -53,16 +61,16 @@ export const metadata: Metadata = {
     type: "website",
     url: siteUrl,
     siteName: "Project Folder Builder",
-    title: "Project Folder Builder — Professional Video Editing Folder Templates",
+    title: "Project Folder Builder - Folders before footage",
     description:
-      "Pick a project type, enter the job details, and download a ready-to-use ZIP with professional folders, checklists, and naming rules.",
+      "Generate clean video editing project folders as ready-to-use ZIPs in seconds. Runs in your browser, and free templates need no login.",
     locale: "en_US"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Project Folder Builder",
+    title: "Project Folder Builder - Folders before footage",
     description:
-      "Free + Pro video editing folder templates. Download a clean project structure as a ZIP in one click.",
+      "Generate clean video editing project folders as ready-to-use ZIPs in seconds.",
     creator: "@jacobbritten"
   },
   robots: {
@@ -80,7 +88,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable}`}>
       <body>
         <Header />
         {children}

@@ -18,9 +18,23 @@ export default async function AppleIcon() {
           borderRadius: 36
         }}
       >
-        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#00FFC8" strokeWidth="1.7" strokeLinejoin="round">
-          <rect x="2.5" y="2.5" width="19" height="19" rx="4" />
-          <path d="M6.5 9.5a1 1 0 0 1 1-1H10l1.2 1.4H16.5a1 1 0 0 1 1 1v4.6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z" />
+        <svg width="124" height="124" viewBox="0 0 64 64" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path
+            d="M8 18.5c0-3 2.4-5.5 5.5-5.5h11.2l5.1 6h20.7c3 0 5.5 2.4 5.5 5.5v22c0 3-2.4 5.5-5.5 5.5h-37C10.4 52 8 49.6 8 46.5z"
+            stroke="#edece2"
+            strokeWidth="4.5"
+          />
+          <path
+            d="M19.5 29.5v13l10.5-6.5z"
+            fill="#edece2"
+            stroke="#edece2"
+            strokeWidth="2"
+          />
+          <path d="M34 31h11" stroke="#46b06a" strokeWidth="4" />
+          <path d="M34 39h16" stroke="#edece2" strokeWidth="4" />
+          <path d="M42 27v18" stroke="#46b06a" strokeWidth="3" />
+          <path d="M42 35h8" stroke="#46b06a" strokeWidth="3" />
+          <path d="M42 43h6" stroke="#46b06a" strokeWidth="3" />
         </svg>
       </div>
     ),

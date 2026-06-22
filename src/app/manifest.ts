@@ -5,14 +5,14 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Project Folder Builder",
     short_name: "Folder Builder",
     description:
-      "Generate professional video editing project folders as a ZIP in seconds.",
+      "Generate clean video editing project folders as ready-to-use ZIPs in seconds.",
     start_url: "/",
     display: "standalone",
     background_color: "#050607",
     theme_color: "#050607",
     icons: [
       {
-        src: "/icon.svg",
+        src: "/logo-mark.svg",
         sizes: "any",
         type: "image/svg+xml",
         purpose: "any"

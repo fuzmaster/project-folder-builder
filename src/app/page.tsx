@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
-import { ArrowRight, Check, Minus, AlertTriangle } from "lucide-react";
+import { ArrowRight, AlertTriangle } from "lucide-react";
 import { freeTemplates } from "@/config/templates";
 import { premiumTemplates } from "@/config/premiumTemplates";
 import { ProjectMetadata, TemplateSpec } from "@/types";
@@ -14,44 +14,32 @@ import { AccountProfile } from "@/lib/firebaseClient";
 import { Wizard } from "@/components/Wizard/Wizard";
 import { trackEvent } from "@/lib/analytics";
 import { downloadProjectZip } from "@/utils/zipGenerator";
+import { makeRootFolderName } from "@/utils/stringFormatter";
+import { validateMetadata } from "@/utils/validation";
+import { recordDownload } from "@/lib/history";
+
+function heroTreeLines(template: TemplateSpec) {
+  const tops = new Map<string, string[]>();
+  for (const path of template.folders) {
+    const [first, second] = path.split("/");
+    if (!tops.has(first)) tops.set(first, []);
+    if (second && !tops.get(first)!.includes(second)) tops.get(first)!.push(second);
+  }
+  const topKeys = [...tops.keys()];
+  const firstKey = topKeys[0];
+  const firstChildren = (tops.get(firstKey) || []).slice(0, 4);
+  const secondKey = topKeys[1];
+  const lines: string[] = [`├─ ${firstKey}/`];
+  firstChildren.forEach((c, i) => {
+    const last = i === firstChildren.length - 1 && !secondKey;
+    lines.push(`│  ${last ? "└─" : "├─"} ${c}/`);
+  });
+  if (secondKey) lines.push(`└─ ${secondKey}/`);
+  return lines;
+}
 
 function today() {
   return new Date().toISOString().slice(0, 10);
-}
-
-type PricingRow = {
-  label: string;
-  free: string | boolean;
-  pro: string | boolean;
-};
-
-const PRICING_ROWS: PricingRow[] = [
-  { label: "Starter + project templates", free: "8", pro: "11" },
-  { label: "Browser-side ZIP generation", free: true, pro: true },
-  { label: "Naming sanitizer", free: true, pro: true },
-  { label: "Markdown checklists", free: true, pro: true },
-  { label: "Premium agency templates", free: false, pro: true },
-  { label: "Premiere / DaVinci starter files", free: false, pro: true },
-  { label: "Client admin + billing folders", free: false, pro: true },
-  { label: "Revision & delivery systems", free: false, pro: true }
-];
-
-function PriceCell({ value }: { value: string | boolean }) {
-  if (value === true) {
-    return (
-      <span className="pfb-pc-yes">
-        <Check size={15} strokeWidth={2} />
-      </span>
-    );
-  }
-  if (value === false) {
-    return (
-      <span className="pfb-pc-no">
-        <Minus size={15} strokeWidth={2} />
-      </span>
-    );
-  }
-  return <span className="pfb-pc-num">{value}</span>;
 }
 
 export default function HomePage() {
@@ -136,34 +124,77 @@ export default function HomePage() {
     <main id="top">
       {/* HERO */}
       <section className="pfb-shell pfb-hero">
-        <span className="pfb-eyebrow">v1.0 / for editors</span>
-        <h1 className="pfb-hero-title">Folders before footage.</h1>
-        <p className="pfb-hero-sub">
-          Pick a project type, drop in the job details, and pull down a clean, named ZIP —
-          folders, checklists, and naming rules already in place.
-        </p>
-        <div className="pfb-hero-meta">
-          <span>
-            <b>{freeCount}</b> free templates
-          </span>
-          <i className="pfb-dot" />
-          <span>
-            <b>{proCount}</b> pro packs
-          </span>
-          <i className="pfb-dot" />
-          <span>browser-side ZIP</span>
+        <div className="pfb-hero-grid">
+          <div>
+            <div className="pfb-hero-eyebrow">
+              <span className="pfb-hero-eyebrow-num">01 / the tool</span>
+              <span className="pfb-hero-eyebrow-desc">Project Folder Builder</span>
+            </div>
+            <h1 className="pfb-hero-title">Folders before footage.</h1>
+            <p className="pfb-hero-sub">
+              Generate clean video editing project folders as ready-to-use ZIPs in seconds.
+            </p>
+            <div className="pfb-hero-cta-row">
+              <a href="#workspace" className="pfb-hero-cta">
+                Build a free project folder <ArrowRight size={14} />
+              </a>
+              <a href="#pricing" className="pfb-hero-cta pfb-hero-cta-secondary">
+                See Pro templates
+              </a>
+            </div>
+            <p className="pfb-hero-trust">Runs in your browser. Free templates need no login.</p>
+          </div>
+          <aside className="pfb-hero-tree" aria-hidden>
+            <div className="pfb-hero-tree-head">
+              <span>02 tree · preview</span>
+              <span className="pfb-hero-tree-meta">
+                {selected.folders.length} dir · {selected.files.length} files
+              </span>
+            </div>
+            <div className="pfb-hero-tree-body">
+              <div className="pfb-hero-tree-root">{makeRootFolderName(metadata)}/</div>
+              {heroTreeLines(selected).map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}
+            </div>
+            <div className="pfb-hero-tree-caption">↑ live preview, updates as you type</div>
+          </aside>
         </div>
       </section>
 
+      <section className="pfb-shell pfb-story" aria-label="Why it helps">
+        <div className="pfb-story-copy">
+          <p>
+            Most editing projects start messy: footage in Downloads, exports on the desktop,
+            captions in random folders, and final files named final_FINAL_v3_realfinal.mp4.
+          </p>
+          <p>
+            Pick a project type, enter the job details, and download a clean folder starter before
+            the chaos starts.
+          </p>
+        </div>
+        <figure className="pfb-story-art">
+          <img
+            src="/Folder%20Tree%20Visual.png"
+            alt="An organized folder tree with source media, project files, assets, exports, client notes, and archive folders."
+          />
+        </figure>
+      </section>
+
+      {/* TEMPLATES BILLBOARD */}
+      <section className="pfb-shell pfb-tplhead" id="templates">
+        <div className="pfb-tplhead-eyebrow">
+          <span className="pfb-tplhead-eyebrow-num">03 / the templates</span>
+          <span className="pfb-tplhead-eyebrow-desc">
+            {freeCount} free · {proCount} pro
+          </span>
+        </div>
+        <h2 className="pfb-tplhead-title">Choose a template.</h2>
+      </section>
+
       {/* WORKSPACE */}
-      <section className="pfb-shell pfb-workspace">
+      <section id="workspace" className="pfb-shell pfb-workspace">
         <div className="pfb-col-templates">
-          <div className="pfb-col-head">
-            <h2 className="pfb-col-title">Choose a template</h2>
-            <span className="pfb-col-count">
-              {freeCount} free · {proCount} pro
-            </span>
-          </div>
           <div
             className="pfb-grid"
             ref={gridRef}
@@ -212,65 +243,67 @@ export default function HomePage() {
         onMetadataChange={setMetadata}
         onSelectTemplate={selectTemplate}
         onDownload={async () => {
+          const validation = validateMetadata(metadata);
+          if (!validation.valid) {
+            setNotice(Object.values(validation.errors)[0] || "Check your project details.");
+            throw new Error(Object.values(validation.errors)[0] || "Check your project details.");
+          }
           try {
             await downloadProjectZip(selected, metadata);
+            recordDownload({
+              templateId: selected.id,
+              templateName: selected.name,
+              tier: selected.tier,
+              projectName: metadata.projectName,
+              clientName: metadata.clientName,
+              at: Date.now()
+            });
             trackEvent("zip_downloaded", { id: selected.id, tier: selected.tier, source: "wizard" });
           } catch (error) {
             setNotice(error instanceof Error ? error.message : "Unable to generate ZIP.");
+            throw error;
           }
         }}
       />
 
-      {/* PRICING */}
+      {/* PRICING (prose) */}
       <section id="pricing" className="pfb-shell pfb-pricing">
-        <div className="pfb-pricing-head">
-          <span className="pfb-eyebrow">pricing / two tiers</span>
-          <h2 className="pfb-section-title">Free to start. Pro when it pays.</h2>
+        <div className="pfb-pricing-eyebrow">
+          <span className="pfb-pricing-eyebrow-num">04 / pro</span>
+          <span className="pfb-pricing-eyebrow-desc">free to start. one-time unlock when it helps</span>
         </div>
-        <div className="pfb-compare" role="table" aria-label="Free versus Pro comparison">
-          <div className="pfb-compare-header" role="row">
-            <div className="pfb-compare-feat" role="columnheader" />
-            <div className="pfb-compare-col" role="columnheader">
-              <span className="pfb-tier-name">FREE</span>
-              <span className="pfb-tier-price">$0</span>
-              <span className="pfb-tier-sub">students &amp; new editors</span>
-            </div>
-            <div className="pfb-compare-col pfb-compare-col-pro" role="columnheader">
-              <span className="pfb-tier-name">PRO</span>
-              <span className="pfb-tier-price">
-                $9<em>/mo</em>
-              </span>
-              <span className="pfb-tier-sub">freelancers &amp; agencies</span>
-            </div>
+        <div className="pfb-plan-grid">
+          <div className="pfb-plan">
+            <span className="pfb-plan-kicker">Free</span>
+            <h2 className="pfb-plan-title">$0</h2>
+            <ul>
+              <li>8 starter templates</li>
+              <li>ZIP download</li>
+              <li>Clean folder names</li>
+              <li>README/checklist files</li>
+              <li>No account required</li>
+            </ul>
           </div>
-          {PRICING_ROWS.map((row, i) => (
-            <div className="pfb-compare-row" role="row" key={i}>
-              <div className="pfb-compare-feat" role="cell">
-                {row.label}
-              </div>
-              <div className="pfb-compare-col" role="cell">
-                <PriceCell value={row.free} />
-              </div>
-              <div className="pfb-compare-col pfb-compare-col-pro" role="cell">
-                <PriceCell value={row.pro} />
-              </div>
-            </div>
-          ))}
-          <div className="pfb-compare-foot" role="row">
-            <div className="pfb-compare-feat" role="cell" />
-            <div className="pfb-compare-col" role="cell">
-              <a href="#top" className="pfb-btn pfb-btn-ghost pfb-btn-sm">
-                Use free
-              </a>
-            </div>
-            <div className="pfb-compare-col pfb-compare-col-pro" role="cell">
-              <a href={gumroadUrl} className="pfb-btn pfb-btn-accent pfb-btn-sm">
-                Get Pro
-                <ArrowRight size={15} />
-              </a>
-            </div>
+          <div className="pfb-plan pfb-plan-pro">
+            <span className="pfb-plan-kicker">Pro</span>
+            <h2 className="pfb-plan-title">$9 one-time unlock</h2>
+            <ul>
+              <li>Agency Video Campaign</li>
+              <li>Professional Podcast Network</li>
+              <li>Freelancer Client System</li>
+              <li>Future template updates</li>
+              <li>Supports development</li>
+            </ul>
           </div>
         </div>
+        <div className="pfb-pricing-cta-row">
+          <a href={gumroadUrl} className="pfb-hero-cta">
+            Unlock Pro templates <ArrowRight size={14} />
+          </a>
+        </div>
+        <p className="pfb-pricing-foot">
+          You only need an account for Pro. Free ZIPs work without signing in.
+        </p>
       </section>
     </main>
   );
