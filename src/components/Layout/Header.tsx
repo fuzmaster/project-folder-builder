@@ -6,18 +6,13 @@ import { Sparkles } from "lucide-react";
 function LogoMark({ size = 30 }: { size?: number }) {
   return (
     <span className="pfb-logo" style={{ width: size, height: size }}>
-      <svg
+      <img
+        src="/App%20Icon.png"
+        alt=""
         width={size}
         height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      >
-        <rect x="2.5" y="2.5" width="19" height="19" rx="4" />
-        <path d="M6.5 9.5a1 1 0 0 1 1-1H10l1.2 1.4H16.5a1 1 0 0 1 1 1v4.6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z" />
-      </svg>
+        className="pfb-logo-img"
+      />
     </span>
   );
 }

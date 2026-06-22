@@ -85,7 +85,7 @@ export default async function OpengraphImage() {
           }}
         >
           <span style={{ fontSize: 18, letterSpacing: "0.22em", color: "#00FFC8", textTransform: "uppercase", marginBottom: 18 }}>
-            videos editors · zip generator
+            video editors · zip generator
           </span>
           <div
             style={{
@@ -111,7 +111,7 @@ export default async function OpengraphImage() {
               lineHeight: 1.4
             }}
           >
-            Pick a project type, drop in the job details, and pull down a clean ZIP — folders, checklists, and naming rules already in place.
+            Generate clean video editing project folders as ready-to-use ZIPs in seconds. Free templates need no login.
           </p>
         </div>
 

@@ -149,13 +149,14 @@ export function AuthPanel({ onProfileChange }: Props) {
     return (
       <div className="pfb-panel">
         <div className="pfb-panel-head">
-          <h2 className="pfb-panel-title">Account</h2>
+          <h2 className="pfb-panel-title">Pro unlock</h2>
           <span className="pfb-panel-tag">offline</span>
         </div>
         <div className="pfb-notice" style={{ marginTop: 14 }}>
           <AlertTriangle size={15} />
           <span>
-            Add the Firebase public environment variables to enable sign-in and Gumroad Pro unlocks.
+            Free templates still work without sign-in. Add Firebase public environment variables to
+            enable account sign-in and Gumroad Pro unlocks.
           </span>
         </div>
       </div>
@@ -168,21 +169,23 @@ export function AuthPanel({ onProfileChange }: Props) {
   return (
     <div className="pfb-panel">
       <div className="pfb-panel-head">
-        <h2 className="pfb-panel-title">Account</h2>
+        <h2 className="pfb-panel-title">Pro unlock</h2>
         <span className={"pfb-account-badge " + (isPro ? "is-pro" : "")}>
           {isPro ? <BadgeCheck size={13} /> : <ShieldCheck size={13} />}
           {isPro ? "PRO" : "FREE"}
         </span>
       </div>
       <p className="pfb-panel-sub">
-        {signedIn ? profile?.email : "Two steps to unlock Pro templates."}
+        {signedIn
+          ? profile?.email
+          : "Free ZIPs need no account. Sign in only to verify a Pro license."}
       </p>
 
       {!signedIn && (
         <div className="pfb-step">
           <div className="pfb-step-head">
             <StepNum n={1} />
-            <span>Sign in</span>
+            <span>Sign in for Pro</span>
           </div>
           <div className="pfb-step-body">
             <button
@@ -252,7 +255,7 @@ export function AuthPanel({ onProfileChange }: Props) {
                 rel="noreferrer"
                 className="pfb-btn pfb-btn-light"
               >
-                Buy Pro on Gumroad
+                Buy one-time Pro unlock
               </a>
             ) : (
               <button type="button" className="pfb-btn pfb-btn-ghost" disabled>

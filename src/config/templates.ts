@@ -111,7 +111,7 @@ export const freeTemplates: TemplateSpec[] = [
     shortName: "Reels",
     tier: "free",
     category: "Social",
-    description: "A simple structure for vertical clips, captions, thumbnails, music, and platform exports.",
+    description: "A simple structure for vertical clips, captions, thumbnails, music, and channel exports.",
     idealFor: "TikTok, Reels, Shorts, and LinkedIn clip editors.",
     folders: [
       "01_SOURCE_MEDIA/01_RAW_CLIPS",

@@ -21,7 +21,7 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
 
   async function handleDownload() {
     if (locked) {
-      onValidationError("Pro template — sign in and verify your Gumroad license to unlock.");
+      onValidationError("Pro template. Buy the one-time unlock, then sign in and verify your Gumroad license.");
       return;
     }
 
@@ -56,7 +56,7 @@ export function DownloadButton({ template, metadata, premiumUnlocked, onValidati
         <span className="pfb-dl-chip">PRO</span>
         <span className="pfb-dl-main">
           <Lock size={17} />
-          Pro — sign in to unlock
+          Pro template
         </span>
       </button>
     );
