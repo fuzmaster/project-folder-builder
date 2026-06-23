@@ -31,18 +31,6 @@ export function Wizard({ metadata, onMetadataChange, onSelectTemplate, onDownloa
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [recommendedId, setRecommendedId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const triggeredRef = useRef(false);
-
-  // first-visit auto-open
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const seen = window.localStorage.getItem(STORAGE_KEY);
-    if (!seen) {
-      setOpen(true);
-      trackEvent("wizard_opened", { source: "auto" });
-      triggeredRef.current = true;
-    }
-  }, []);
 
   // listen for manual open events from elsewhere (e.g. header)
   useEffect(() => {
